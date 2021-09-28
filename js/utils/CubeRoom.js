@@ -4,14 +4,16 @@ class CubeRoom {
     const scene = cyberspace.scene
     const world = cyberspace.world
     const a = cyberspace.area
+    this.area = a
     const debug = cyberspace.settings.controls
 
     const geometry = new THREE.PlaneBufferGeometry(a, a)
-    const floorMat = new THREE.MeshStandardMaterial({
+    this.floorMat = new THREE.MeshStandardMaterial({
       color: 0x4c4c4b,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: debug ? 1 : 0.25
+      // opacity: debug ? 1 : 0.25
+      opacity: 0.25
     })
     const wallMat = new THREE.MeshBasicMaterial({
       wireframe: true,
@@ -19,7 +21,7 @@ class CubeRoom {
       opacity: debug ? 1 : 0
     })
 
-    const floor = new THREE.Mesh(geometry, floorMat)
+    const floor = new THREE.Mesh(geometry, this.floorMat)
     floor.receiveShadow = true
     scene.add(floor)
 
@@ -91,6 +93,32 @@ class CubeRoom {
     leftWall.position.copy(leftWallBody.position)
     rightWall.quaternion.copy(rightWallBody.quaternion)
     rightWall.position.copy(rightWallBody.position)
+
+    this.objs = {
+      floor: { mesh: floor, body: floorBody },
+      backWall: { mesh: backWall, body: backWallBody },
+      frontWall: { mesh: frontWall, body: frontWallBody },
+      leftWall: { mesh: leftWall, body: leftWallBody },
+      rightWall: { mesh: rightWall, body: rightWallBody }
+    }
+  }
+
+  scale (x, y, z) {
+    this.objs.floor.mesh.scale.y = z
+    this.objs.floor.mesh.scale.x = x
+
+    const a = this.area
+    const d = z * 10
+    this.objs.backWall.mesh.position.z = d
+    this.objs.backWall.body.position = new CANNON.Vec3(0, a / 2, d)
+    this.objs.frontWall.mesh.position.z = -d
+    this.objs.frontWall.body.position = new CANNON.Vec3(0, a / 2, -d)
+
+    const w = x * 10
+    this.objs.leftWall.mesh.position.x = w
+    this.objs.leftWall.body.position = new CANNON.Vec3(w, a / 2, 0)
+    this.objs.rightWall.mesh.position.x = -w
+    this.objs.rightWall.body.position = new CANNON.Vec3(-w, a / 2, 0)
   }
 }
 

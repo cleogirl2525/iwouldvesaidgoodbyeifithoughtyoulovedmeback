@@ -3,7 +3,6 @@ class BubbleFactory {
   constructor (cyberspace) {
     this.cyberspace = cyberspace
     this.sph = new THREE.SphereGeometry(1, 20, 20)
-    this.box = new THREE.BoxGeometry(1, 1, 1)
     this.mat = new THREE.MeshStandardMaterial({
       color: 0xcccccc,
       metalness: 0.3,
@@ -22,15 +21,17 @@ class BubbleFactory {
     }
   }
 
-  createSprite () {
+  createSprite (size) {
     const map = new THREE.TextureLoader().load('./images/heart-blue.gif')
     const material = new THREE.SpriteMaterial({ map: map })
     const sprite = new THREE.Sprite(material)
+    sprite.scale.set(size, size, size)
     return sprite
   }
 
-  createBubble (size) {
-    size = size || 1
+  createBubble (size, mass) {
+    size = typeof size === 'number' ? size : 1
+    mass = typeof mass === 'number' ? mass : 1
     const position = this.ranXYZ()
     position.y = this.cyberspace.area / 2
     // THREE.js mesh
@@ -41,7 +42,7 @@ class BubbleFactory {
     mesh.position.copy(position)
     this.cyberspace.scene.add(mesh)
     //
-    const sprite = this.createSprite()
+    const sprite = this.createSprite(size)
     this.cyberspace.scene.add(sprite)
     // CANNON.js body
     const body = new CANNON.Body({

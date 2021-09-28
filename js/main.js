@@ -1,4 +1,4 @@
-/* global dat, BR */
+/* global dat, BubbleRoom */
 const DATA = {
   debug: true, // display debug GUI controls
   maxBlue: 255, // FF=255 (E6=230, CC=204)
@@ -14,6 +14,21 @@ const DATA = {
     minute: 0 // midnight
   }
 }
+
+// create three.js 3D bubbles
+// -----------------------------------------------------------------
+const BR = new BubbleRoom({
+  controls: false,
+  log: false
+})
+
+// BR.logCamPos()
+BR.camera.position.x = -0.848
+BR.camera.position.y = 1.695
+BR.camera.position.z = -11.653
+BR.camera.rotation.x = -3.08
+BR.camera.rotation.y = -0.005
+BR.camera.rotation.z = -3.141
 
 // •.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*
 // •.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*

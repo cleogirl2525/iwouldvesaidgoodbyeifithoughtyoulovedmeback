@@ -44,13 +44,13 @@ class BubbleRoom extends CyberSpace {
     this.world.gravity.set(0, -9.82, 0)
     this.oldElapsedTime = 0
     this.defaultMat = new CANNON.Material('default')
-    const defaultContact = new CANNON.ContactMaterial(
+    this.defaultContact = new CANNON.ContactMaterial(
       this.defaultMat,
       this.defaultMat,
       { friction: 0.1, restitution: 0.7 }
     )
-    this.world.addContactMaterial(defaultContact)
-    this.world.defaultContactMaterial = defaultContact
+    this.world.addContactMaterial(this.defaultContact)
+    this.world.defaultContactMaterial = this.defaultContact
   }
 
   updatePhysicsWorld () {
@@ -67,17 +67,4 @@ class BubbleRoom extends CyberSpace {
   }
 }
 
-// -----------------------------------------------------------------
-
-const BR = new BubbleRoom({
-  controls: false,
-  log: false
-})
-
-// BR.logCamPos()
-BR.camera.position.x = -0.848
-BR.camera.position.y = 1.695
-BR.camera.position.z = -11.653
-BR.camera.rotation.x = -3.08
-BR.camera.rotation.y = -0.005
-BR.camera.rotation.z = -3.141
+window.BubbleRoom = BubbleRoom
