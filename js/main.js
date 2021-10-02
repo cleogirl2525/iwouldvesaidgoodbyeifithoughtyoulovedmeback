@@ -1,14 +1,47 @@
 /* global dat, BubbleRoom */
 const DATA = {
   debug: true, // display debug GUI controls
+  // BACKGRROUND COLOR ----------------------------------------
   maxBlue: 255, // FF=255 (E6=230, CC=204)
   testDay: 0, // for debugging date
+  // TEXT DETAILS ---------------------------------------------
   scrollTextURL: 'texts/page2.txt',
   flashTextURL: 'texts/page2-first.txt',
   scrollText: null, // text to scroll (loaded below)
   flashText: null, // text to flash on first of the month (loaded below)
   animationStyle: 'flash', // 'flash' or 'scroll'
   scrollSpeed: 0.75,
+  // ROOM DEETZ -----------------------------------------------
+  roomDepth: 1.3,
+  roomWidth: 2,
+  floorColor: 0xfcfcfc,
+  floorOpacity: 0,
+  // PHYSICS --------------------------------------------------
+  bounciness: 0.55,
+  gravity: -4.8,
+  // BUBBLE DEETZ ---------------------------------------------
+  bubbleColor: 0x35e,
+  bubbleSize: 2.3,
+  bubbleOpacity: 0.56,
+  metalness: 0.3,
+  roughness: 0.71,
+  createBubble: () => BR.factory.createBubble(DATA.bubbleSize),
+  // CAMERA ----------------------------------------------------
+  cameraCoords: {
+    position: { x: 0.03, y: 17.64, z: -2.36 },
+    rotation: { x: -1.7, y: 0, z: 3.13 }
+  },
+  cameraSettings: () => {
+    const px = Math.round(BR.camera.position.x * 100) / 100
+    const py = Math.round(BR.camera.position.y * 100) / 100
+    const pz = Math.round(BR.camera.position.z * 100) / 100
+    const rx = Math.round(BR.camera.rotation.x * 100) / 100
+    const ry = Math.round(BR.camera.rotation.y * 100) / 100
+    const rz = Math.round(BR.camera.rotation.z * 100) / 100
+    const settings = `${px}, ${py}, ${pz}, ${rx}, ${ry}, ${rz}`
+    window.alert(settings)
+  },
+  // MISC LOGIX -----------------------------------------------
   refreshTime: { // when should the browser refresh/reset
     hour: 0, // midnight
     minute: 0 // midnight
@@ -17,18 +50,7 @@ const DATA = {
 
 // create three.js 3D bubbles
 // -----------------------------------------------------------------
-const BR = new BubbleRoom({
-  controls: false,
-  log: false
-})
-
-// BR.logCamPos()
-BR.camera.position.x = -0.848
-BR.camera.position.y = 1.695
-BR.camera.position.z = -11.653
-BR.camera.rotation.x = -3.08
-BR.camera.rotation.y = -0.005
-BR.camera.rotation.z = -3.141
+const BR = new BubbleRoom({ controls: false, log: false })
 
 // •.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*
 // •.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*
@@ -39,6 +61,7 @@ const setupGUI = () => {
   const bg = gui.addFolder('background-color')
   bg.add(DATA, 'maxBlue', 0, 255)
   bg.add(DATA, 'testDay', 0, 31)
+
   const st = gui.addFolder('scroll-text')
   st.add(DATA, 'scrollSpeed', 0, 3, 0.1)
   const CSS = {
@@ -50,7 +73,36 @@ const setupGUI = () => {
   for (const prop in CSS) {
     st.add(CSS, prop, 0, 16, 0.1).onChange(v => setCSSVar(prop, v, 'vw'))
   }
-  gui.add(BR.factory, 'createBubble')
+
+  const rm = gui.addFolder('room')
+  rm.add(DATA, 'roomDepth', 0, 2, 0.1)
+    .onChange(v => BR.room.scale(DATA.roomWidth, 1, DATA.roomDepth))
+  rm.add(DATA, 'roomWidth', 0, 2, 0.1)
+    .onChange(v => BR.room.scale(DATA.roomWidth, 1, DATA.roomDepth))
+  rm.add(DATA, 'floorOpacity', 0, 1, 0.01).name('floorOpacity')
+    .onChange(v => { BR.room.floorMat.opacity = v })
+  rm.addColor(DATA, 'floorColor')
+    .onChange(v => BR.room.floorMat.color.set(v))
+
+  const ph = gui.addFolder('physics')
+  ph.add(DATA, 'bounciness', 0, 1.5, 0.01).name('bounciness')
+    .onChange(v => { BR.defaultContact.restitution = v })
+  ph.add(DATA, 'gravity', -20, -1, 0.1).name('gravity')
+    .onChange(v => { BR.world.gravity.y = v })
+
+  gui.add(DATA, 'createBubble')
+  const bf = gui.addFolder('bubbles-settings')
+  bf.add(DATA, 'bubbleSize', 0, 3, 0.1)
+  bf.add(DATA, 'bubbleOpacity', 0, 1, 0.01)
+    .onChange(v => { BR.factory.mat.opacity = v })
+  bf.add(DATA, 'metalness', 0, 1, 0.01)
+    .onChange(v => { BR.factory.mat.metalness = v })
+  bf.add(DATA, 'roughness', 0, 1, 0.01)
+    .onChange(v => { BR.factory.mat.roughness = v })
+  bf.addColor(DATA, 'bubbleColor')
+    .onChange(v => BR.factory.mat.color.set(v))
+
+  // gui.add(DATA, 'cameraSettings')
 }
 
 const getCSSVar = (prop, raw) => {
@@ -111,6 +163,30 @@ const scrollText = () => {
   }
 }
 
+const setupCameraData = () => {
+  for (const prop in DATA.cameraCoords) {
+    for (const axis in DATA.cameraCoords[prop]) {
+      BR.camera[prop][axis] = DATA.cameraCoords[prop][axis]
+    }
+  }
+}
+
+const setupRoomData = () => {
+  // setup room deetz
+  BR.room.scale(DATA.roomWidth, 1, DATA.roomDepth)
+  BR.room.scale(DATA.roomWidth, 1, DATA.roomDepth)
+  BR.room.floorMat.opacity = DATA.floorOpacity
+  BR.room.floorMat.color.set(DATA.floorColor)
+  // setup physics deetz
+  BR.defaultContact.restitution = DATA.bounciness
+  BR.world.gravity.y = DATA.gravity
+  // setup bubble deetz
+  BR.factory.mat.opacity = DATA.bubbleOpacity
+  BR.factory.mat.metalness = DATA.metalness
+  BR.factory.mat.roughness = DATA.roughness
+  BR.factory.mat.color.set(DATA.bubbleColor)
+}
+
 // •.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*
 // •.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*•.¸¸¸.•*
 
@@ -135,6 +211,11 @@ async function setup () {
     DATA.animationStyle = 'scroll'
     sec.textContent = DATA.scrollText
   }
+
+  // match camera/room settings to DATA settings
+  setupCameraData()
+  setupRoomData()
+
   // start animation loop
   loop()
 }
