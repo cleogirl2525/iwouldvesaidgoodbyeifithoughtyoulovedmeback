@@ -23,7 +23,7 @@ body {
   line-height: var(--line-height);
   text-transform: uppercase;
   text-align: justify;
-  text-shadow: 0 0 3px #FFFFFF;
+  text-shadow: 0 0 7px #FFFFFF;
 
   height: 100vh;
   padding: var(--padding);
