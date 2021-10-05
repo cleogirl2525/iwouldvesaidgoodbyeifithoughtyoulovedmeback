@@ -7,7 +7,7 @@ class BubbleRoom extends CyberSpace {
     this.setupPhysicsWorld()
     this.lightScene()
     this.room = new CubeRoom(this)
-    this.factory = new BubbleFactory(this)
+    this.factory = new BubbleFactory(this, window.imagePath)
     this.renderer.domElement.style.zIndex = 2
   }
 

@@ -4,10 +4,10 @@ const DATA = {
   // BACKGRROUND COLOR ----------------------------------------
   maxBlue: 255, // FF=255 (E6=230, CC=204)
   testDay: 0, // for debugging date
-  _TODAY: 1, // new Date().getDate(),
+  _TODAY: new Date().getDate(),
   // TEXT DETAILS ---------------------------------------------
-  scrollTextURL: 'texts/page2.txt',
-  flashTextURL: 'texts/page2-first.txt',
+  scrollTextURL: window.scrollTextURL,
+  flashTextURL: window.flashTextURL,
   scrollText: null, // text to scroll (loaded below)
   flashText: null, // text to flash on first of the month (loaded below)
   animationStyle: 'flash', // 'flash' or 'scroll'
@@ -126,6 +126,7 @@ const setupGUI = () => {
   bf.add(DATA, 'testAmount', 0, DATA.totalBubbles, 1)
 
   // gui.add(DATA, 'cameraSettings')
+  dat.GUI.toggleHide()
 }
 
 const getCSSVar = (prop, raw) => {

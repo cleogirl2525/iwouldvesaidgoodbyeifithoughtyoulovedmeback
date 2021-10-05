@@ -36,3 +36,10 @@ body {
   justify-content: center;
   align-items: center;
 }
+
+.home-screens {
+  display: flex;
+  height: 80vh;
+  padding: 50px;
+  justify-content: space-around;
+}
