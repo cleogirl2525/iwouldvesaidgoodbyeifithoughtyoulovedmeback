@@ -4,6 +4,7 @@ const DATA = {
   // BACKGRROUND COLOR ----------------------------------------
   maxBlue: 255, // FF=255 (E6=230, CC=204)
   testDay: 0, // for debugging date
+  _TODAY: 1, // new Date().getDate(),
   // TEXT DETAILS ---------------------------------------------
   scrollTextURL: 'texts/page2.txt',
   flashTextURL: 'texts/page2-first.txt',
@@ -11,6 +12,8 @@ const DATA = {
   flashText: null, // text to flash on first of the month (loaded below)
   animationStyle: 'flash', // 'flash' or 'scroll'
   scrollSpeed: 0.75,
+  flashDelay: 3000,
+  _FLASH_INDEX: 0,
   // ROOM DEETZ -----------------------------------------------
   roomDepth: 1.3,
   roomWidth: 2,
@@ -21,11 +24,29 @@ const DATA = {
   gravity: -4.8,
   // BUBBLE DEETZ ---------------------------------------------
   bubbleColor: 0x35e,
-  bubbleSize: 2.3,
+  // bubbleSize: 2.3,
   bubbleOpacity: 0.56,
   metalness: 0.3,
   roughness: 0.71,
-  createBubble: () => BR.factory.createBubble(DATA.bubbleSize),
+  totalBubbles: 300, // amount of bubbles to reach by end of the month
+  testAmount: 0,
+  createBubble: () => {
+    if (DATA.testAmount < 0) DATA.initBubble(1)
+    else DATA.initBubble(DATA.testAmount)
+  },
+  initBubble: (amount) => {
+    let count = 0
+    const run = () => {
+      const size = 1 + Math.random() * 1.3
+      BR.factory.createBubble(size)
+      count++
+      if (count < amount) setTimeout(run, 100)
+    }
+    run(amount)
+  },
+  _TIMES: [],
+  _COUNT: 0,
+  _HOLD: false,
   // CAMERA ----------------------------------------------------
   cameraCoords: {
     position: { x: 0.03, y: 17.64, z: -2.36 },
@@ -64,6 +85,7 @@ const setupGUI = () => {
 
   const st = gui.addFolder('scroll-text')
   st.add(DATA, 'scrollSpeed', 0, 3, 0.1)
+  st.add(DATA, 'flashDelay', 1000, 10000, 100)
   const CSS = {
     '--font-size': getCSSVar('--font-size'),
     '--letter-spacing': getCSSVar('--letter-spacing'),
@@ -92,7 +114,7 @@ const setupGUI = () => {
 
   gui.add(DATA, 'createBubble')
   const bf = gui.addFolder('bubbles-settings')
-  bf.add(DATA, 'bubbleSize', 0, 3, 0.1)
+  // bf.add(DATA, 'bubbleSize', 0, 3, 0.1)
   bf.add(DATA, 'bubbleOpacity', 0, 1, 0.01)
     .onChange(v => { BR.factory.mat.opacity = v })
   bf.add(DATA, 'metalness', 0, 1, 0.01)
@@ -101,6 +123,7 @@ const setupGUI = () => {
     .onChange(v => { BR.factory.mat.roughness = v })
   bf.addColor(DATA, 'bubbleColor')
     .onChange(v => BR.factory.mat.color.set(v))
+  bf.add(DATA, 'testAmount', 0, DATA.totalBubbles, 1)
 
   // gui.add(DATA, 'cameraSettings')
 }
@@ -140,6 +163,42 @@ const calculateBlueFromDay = (testDate) => {
   return Math.round(blue)
 }
 
+const setupBubbles = () => {
+  const days = totalDaysThisMonth()
+  const perDay = Math.round(DATA.totalBubbles / days)
+  const inc = 24 / perDay
+  for (let i = inc; i < 24; i += inc) DATA._TIMES.push(i)
+  //
+  const today = new Date().getDate()
+  const total = totalDaysThisMonth()
+  const start = (today / total) * DATA.totalBubbles
+  const h = new Date().getHours()
+  const ts = DATA._TIMES.map(t => Math.floor(t))
+  const v = ts.filter(t => t >= h)
+  const i = ts.indexOf(v[0])
+  DATA._COUNT = i
+  DATA.initBubble(start + DATA._COUNT)
+}
+
+const checkForNewBubble = () => {
+  if (DATA._HOLD) return
+  const d = new Date()
+  const h = d.getHours()
+  const m = d.getMinutes()
+  const next = DATA._TIMES[DATA._COUNT]
+  const hour = Math.floor(next)
+  const dec = next - hour
+  const min = Math.round(dec * 60)
+  if (h === hour && m === min) {
+    DATA.initBubble(1)
+    DATA._COUNT++
+    DATA._HOLD = true
+    setTimeout(() => {
+      DATA._HOLD = false
+    }, 1200)
+  }
+}
+
 const checkRefresh = () => {
   const d = new Date()
   const h = d.getHours()
@@ -161,6 +220,20 @@ const scrollText = () => {
   } else {
     ele.style.top = cur + 'px'
   }
+}
+
+const flashText = () => {
+  DATA._FLASH_INDEX++
+  if (DATA._FLASH_INDEX >= DATA.flashText.length) {
+    DATA._FLASH_INDEX = 0
+  }
+  const next = DATA.flashText[DATA._FLASH_INDEX]
+  const ele = document.querySelector('.text')
+  ele.style.top = '0px'
+  ele.style.width = '100vw'
+  ele.style.display = 'flex'
+  ele.textContent = next
+  setTimeout(flashText, DATA.flashDelay)
 }
 
 const setupCameraData = () => {
@@ -196,8 +269,8 @@ async function setup () {
   const res1 = await window.fetch(DATA.scrollTextURL)
   DATA.scrollText = await res1.text()
   const res2 = await window.fetch(DATA.flashTextURL)
-  DATA.flashTextText = await res2.text()
-  DATA.flashTextText = DATA.flashTextText.split('\n').filter(t => t !== '')
+  DATA.flashText = await res2.text()
+  DATA.flashText = DATA.flashText.split('\n').filter(t => t !== '')
   // create section element (container for scrolling text)
   const sec = document.createElement('section')
   sec.style.top = window.innerHeight + 'px'
@@ -216,15 +289,23 @@ async function setup () {
   setupCameraData()
   setupRoomData()
 
+  // brief delay to wait for img list
+  setTimeout(setupBubbles, 1000)
+
+  if (DATA._TODAY === 1) flashText()
+
   // start animation loop
   loop()
 }
 
 function loop () {
   window.requestAnimationFrame(loop)
+
   checkRefresh()
 
-  scrollText()
+  checkForNewBubble()
+
+  if (DATA._TODAY > 1) scrollText()
 
   const test = DATA.testDay ? DATA.testDay : null
   const blue = calculateBlueFromDay(test)
