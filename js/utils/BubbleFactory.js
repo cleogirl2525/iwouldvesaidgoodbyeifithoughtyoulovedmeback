@@ -11,6 +11,11 @@ class BubbleFactory {
       opacity: 0.5
     })
     this.objs = {}
+
+    this.imgList = []
+    window.fetch('./images/bubble-list.txt')
+      .then(res => res.text())
+      .then(txt => { this.imgList = txt.split('\n') })
   }
 
   ranXYZ () {
@@ -22,7 +27,8 @@ class BubbleFactory {
   }
 
   createSprite (size) {
-    const map = new THREE.TextureLoader().load('./images/heart-blue.gif')
+    const gif = this.imgList[Math.floor(Math.random() * this.imgList.length)]
+    const map = new THREE.TextureLoader().load('./images/' + gif)
     const material = new THREE.SpriteMaterial({ map: map })
     const sprite = new THREE.Sprite(material)
     sprite.scale.set(size, size, size)
