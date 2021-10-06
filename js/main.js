@@ -1,4 +1,4 @@
-/* global dat, BubbleRoom */
+/* global dat, BubbleRoom, sestina */
 const DATA = {
   debug: true, // display debug GUI controls
   // BACKGRROUND COLOR ----------------------------------------
@@ -197,7 +197,24 @@ const checkForNewBubble = () => {
     setTimeout(() => {
       DATA._HOLD = false
     }, 1200)
+    // RUN SESTINA ALGORITHM ON TEXT
+    if (new Date().getDate() !== 1) {
+      const ele = document.querySelector('.text')
+      ele.textContent = sestina(ele.textContent)
+    }
   }
+}
+
+const logTimes = () => {
+  const times = []
+  DATA._TIMES.forEach(time => {
+    const hour = Math.floor(time)
+    const dec = time - hour
+    const min = Math.round(dec * 60)
+    const z = (String(min).length === 1) ? '0' : ''
+    times.push(`${hour}:${min}${z}`)
+  })
+  return times
 }
 
 const checkRefresh = () => {
