@@ -28,7 +28,7 @@ const DATA = {
   bubbleOpacity: 0.56,
   metalness: 0.3,
   roughness: 0.71,
-  totalBubbles: 300, // amount of bubbles to reach by end of the month
+  totalBubbles: 25, // amount of bubbles to reach by end of the month
   testAmount: 0,
   createBubble: () => {
     if (DATA.testAmount < 0) DATA.initBubble(1)
